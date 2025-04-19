@@ -22,11 +22,13 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Determine access to the MPC toolbox
-
-if license('test','MPC_Toolbox');    solveUse = 'mpc';
-else;                                solveUse = 'quadprog';
+if isfield(params, 'solveUse')
+    solveUse = params.solveUse;
+    if strcmp(solveUse, 'mpc') & ~license('test', 'MPC_Toolbox')
+        solveUse = 'quadprog';
+    end
 end
-%solveUse = 'quadprog';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Check spatial smoothing kernel
 
@@ -85,10 +87,10 @@ while (n_iter <= params.max_learn)&&(dDict > params.learn_eps)             % Whi
       if (n_iter <= 1)
        DTD = time_dict_out.'*time_dict_out; % Precompute the Hessian   
        end
-       [S, W] = dictionaryRWL1SF(time_data_obj,{time_dict_out,DTD,Phi},corr_kern,params,S);   
+       [S, W] = dictionaryRWL1SF(time_data_obj,{time_dict_out,DTD,Phi},corr_kern,params,S,Phi,solveUse);   
     else
-	DTD = dict_out.'*dict_out; % Precompute the Hessian   
-	[S, W] = dictionaryRWL1SF(data_obj,{dict_out,DTD,Phi},corr_kern,params,S);   
+	DTD = dict_out.'*dict_out; % Precompute the Hessian
+	[S, W] = dictionaryRWL1SF(data_obj,{dict_out,DTD,Phi},corr_kern,params,S,Phi,solveUse);   
     end
 %     D2  = Phi*dict_out;
 %    [S, W] = dictionaryRWL1SF(data_obj,{dict_out,DTD,Phi},corr_kern,params,S);
@@ -169,7 +171,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Resize compression
 if (params.time_compression < 1)
-  [S, W] = dictionaryRWL1SF(time_data_obj,{time_dict_out,DTD,Phi},corr_kern,params,S); 
+  [S, W] = dictionaryRWL1SF(time_data_obj,{time_dict_out,DTD,Phi},corr_kern,params,S,Phi,solveUse); 
   %[S, W] = dictionaryRWL1SF(time_data_obj,time_dict_out,corr_kern,params,S,Phi,solveUse);
   inverted = pinv(time_mat);
   dict_out = dictionary_update(data_obj.', inverted * time_dict_out, S.', step_s, params);
@@ -178,7 +180,7 @@ end
 %% Some post-processing
 % Re-compute the presence coefficients from the dictionary:
 if ~params.normalizeSpatial
-    [S, ~] = dictionaryRWL1SF(data_obj,dict_out,corr_kern,params,S);       % Infer coefficients given the data and dictionary
+    [S, ~] = dictionaryRWL1SF(data_obj,dict_out,corr_kern,params,S,Phi,solveUse);       % Infer coefficients given the data and dictionary
 end
 Dnorms   = sqrt(sum(dict_out.^2,1));                                       % Get norms of each dictionary element
 Smax     = max(S,[],1);                                                    % Get maximum value of each spatial map

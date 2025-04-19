@@ -10,11 +10,6 @@ function [S, iA] = singleGaussNeuroInfer(tau_vec, mov_vec, D, lambda_val, TOL, n
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Input parsing
-
-% if license('test','MPC_Toolbox');    useMPC = true;
-% else;                                useMPC = false;
-% end
-
 if nargin > 7;   solveUse = varargin{1};
 else;            solveUse = 'quadprog';  % QUADPROG, TFOCS, FISTA 
 end
@@ -58,9 +53,9 @@ else
                 else; iA = false(size(zeros(0,1)));   end
                 [S, ~, iA, ~] = mpcActiveSetSolver(DTD,...                     % Hessian matrix
                      double(-2*D.'*mov_vec+lambda_val.*tau_vec),...        % Multiplier of the objective linear function
-                     zeros(0,n),...                                        % Linear inequality constraint coefs
+                     zeros(0,N2),...                                        % Linear inequality constraint coefs
                      zeros(0,1),...                                        % Right-hand side of inequality constraints
-                     zeros(0,n),...                                        % Linear eq constraint coefs
+                     zeros(0,N2),...                                        % Linear eq constraint coefs
                      zeros(0,1),...                                        % Right-hand side of eq. constraints
                      iA,...                           % Initial active inequalities
                      mpc_opts);                                                % Using MPC to solve the non-negative weighted LASSO
